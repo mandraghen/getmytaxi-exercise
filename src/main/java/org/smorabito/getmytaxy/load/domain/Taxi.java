@@ -1,21 +1,12 @@
 package org.smorabito.getmytaxy.load.domain;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
-import java.util.Objects;
-
-@Data
+@Getter
+@Setter
+@ToString
 public class Taxi extends Coordinates {
     private String id;
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof Taxi taxi)) return false;
-        return Objects.equals(getId(), taxi.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(getId());
-    }
 }

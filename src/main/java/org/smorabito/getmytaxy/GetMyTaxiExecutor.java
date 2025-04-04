@@ -1,41 +1,41 @@
 package org.smorabito.getmytaxy;
 
-import org.smorabito.getmytaxy.load.domain.Coordinates;
-import org.smorabito.getmytaxy.load.domain.Request;
-import org.smorabito.getmytaxy.load.domain.Taxi;
-import org.smorabito.getmytaxy.load.domain.TaxiMap;
-import org.smorabito.getmytaxy.search.domain.Graph;
-import org.smorabito.getmytaxy.search.domain.Node;
+import org.smorabito.getmytaxy.export.dto.BestRoutes;
+import org.smorabito.getmytaxy.load.dto.InputFiles;
+import org.smorabito.getmytaxy.load.service.InputOutputService;
+import org.smorabito.getmytaxy.search.service.TaxiMapSearchService;
 
-import java.util.List;
-import java.util.stream.Stream;
+import java.util.Optional;
+import java.util.logging.Logger;
 
 public class GetMyTaxiExecutor {
-    public void findTaxis(TaxiMap taxiMap, List<Taxi> taxis, Request request) {
-        //create the graph
-        //run the oprational search
-        //find the tax that minimizes the time
-        //fine the taxi that minimizes the distance
-    }
+    private static final Logger LOG = Logger.getLogger(GetMyTaxiExecutor.class.getName());
 
-    private Graph<Coordinates> createGraph(TaxiMap taxiMap) {
-        Graph<Coordinates> graph = new Graph<>();
-        //create the nodes
-        for (int x = 0; x < taxiMap.getWidth(); x++) {
-            for (int y = 0; y < taxiMap.getHeight(); y++) {
-                Coordinates coordinates = new Coordinates();
-                coordinates.setX(x);
-                coordinates.setY(y);
-                graph.addNode(new Node<>(coordinates));
-            }
+    private static final String OUTPUT_FILENAME = "./data/output.json";
+
+    private final InputOutputService inputOutputService = new InputOutputService();
+    private final TaxiMapSearchService taxiMapSearchService = new TaxiMapSearchService();
+
+    public void executeTaxiSearch(String taxiMapFilename, String taxiCoordinatesFilename, String requestFilename) {
+        Optional<InputFiles> inputFiles = inputOutputService.parseInputFiles(taxiMapFilename, taxiCoordinatesFilename, requestFilename);
+        if (inputFiles.isEmpty()) {
+            LOG.severe("Error reading the input files");
+            return;
         }
 
-//        taxiMap.getCheckpoints().forEach(checkpoint -> {
-//            Coordinates coordinates = new Coordinates();
-//            coordinates.setX(checkpoint.getX());
-//            coordinates.setY(checkpoint.getY());
-//            graph.addNode(new Node<>(coordinates));
-//        });
-        return graph;
+        InputFiles inputFilesValue = inputFiles.get();
+
+        Optional<BestRoutes> bestTaxis = taxiMapSearchService.findBestTaxis(inputFilesValue.getTaxiMap(),
+                inputFilesValue.getTaxis(), inputFilesValue.getRequest());
+        if (bestTaxis.isEmpty()) {
+            LOG.severe("Error searching for the best taxis");
+            return;
+        }
+        BestRoutes bestRoutes = bestTaxis.get();
+
+        LOG.info("Response " + bestRoutes);
+
+        //serialize response in a json file
+        inputOutputService.writeObjectToFile(bestRoutes, OUTPUT_FILENAME);
     }
 }
