@@ -1,4 +1,4 @@
-package org.smorabito.getmytaxy.export.dto;
+package org.smorabito.getmytaxy.export.domain;
 
 import lombok.Data;
 

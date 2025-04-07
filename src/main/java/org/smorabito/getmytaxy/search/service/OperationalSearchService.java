@@ -3,7 +3,9 @@ package org.smorabito.getmytaxy.search.service;
 import org.smorabito.getmytaxy.load.domain.Weight;
 import org.smorabito.getmytaxy.search.domain.Graph;
 import org.smorabito.getmytaxy.search.domain.Node;
+import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
@@ -11,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+@Service
 public class OperationalSearchService {
     /**
      * This method is used to calculate the shortest path from a source node to all other nodes in the graph using
@@ -22,10 +25,11 @@ public class OperationalSearchService {
      */
     //TODO Improve getting a list of destinations and stopping when all the destinations are reached
     public <T> Graph<T> calculateShortestPathFromSource(Graph<T> graph, Node<T> source,
-                                                        Function<Weight, Integer> weightProvider) {
+                                                        Function<Weight, Integer> weightProvider,
+                                                        Collection<Node<T>> destinationNodes) {
+        var destinationNodesSet = new HashSet<>(destinationNodes);
         //reset the graph: sourceDistance, and shortest paths
         resetGraph(graph);
-
         //init first node and hash sets
         initWeight(source.getSourceDistance());
 
@@ -51,6 +55,13 @@ public class OperationalSearchService {
                 }
             }
             visitedNodes.add(currentNode);
+
+            //if the current node is one of the destination nodes, and check if all the destination nodes are visited
+            destinationNodesSet.remove(currentNode);
+            if (destinationNodesSet.isEmpty()) {
+                //if all the destination nodes are visited, break the loop
+                break;
+            }
         }
 
         graph.setCalculated(true);
@@ -81,7 +92,6 @@ public class OperationalSearchService {
     private <T> Node<T> getLowestDistanceNode(Set<Node<T>> unvisitedNodes, Function<Weight, Integer> weightProvider) {
         Node<T> lowestDistanceNode = null;
         int lowestDistance = Integer.MAX_VALUE;
-        //TODO improve with lambda expression
         for (Node<T> node : unvisitedNodes) {
             int nodeDistance = weightProvider.apply(node.getSourceDistance());
             if (nodeDistance < lowestDistance) {
@@ -102,9 +112,9 @@ public class OperationalSearchService {
      */
     private <T> void updateMinimumDistance(Node<T> evaluationNode, Weight edgeWeigh, Node<T> sourceNode,
                                            Function<Weight, Integer> weightProvider) {
-        int sourceDistance = weightProvider.apply((sourceNode.getSourceDistance()));
-        int edgeWeighValue = weightProvider.apply((edgeWeigh));
-        int evaluationDistance = weightProvider.apply((evaluationNode.getSourceDistance()));
+        int sourceDistance = weightProvider.apply(sourceNode.getSourceDistance());
+        int edgeWeighValue = weightProvider.apply(edgeWeigh);
+        int evaluationDistance = weightProvider.apply(evaluationNode.getSourceDistance());
         if (sourceDistance + edgeWeighValue < evaluationDistance) {
             updateAllWeights(evaluationNode, edgeWeigh, sourceNode);
             //update the shortest path of the evaluation node starting from the current node shortest path and adding it

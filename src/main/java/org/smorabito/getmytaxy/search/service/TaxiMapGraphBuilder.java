@@ -1,17 +1,21 @@
 package org.smorabito.getmytaxy.search.service;
 
+import lombok.RequiredArgsConstructor;
 import org.smorabito.getmytaxy.load.domain.Coordinates;
 import org.smorabito.getmytaxy.load.domain.TaxiMap;
 import org.smorabito.getmytaxy.load.domain.Wall;
 import org.smorabito.getmytaxy.load.domain.Weight;
 import org.smorabito.getmytaxy.search.domain.Graph;
 import org.smorabito.getmytaxy.search.domain.Node;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.stream.Stream;
 
+@RequiredArgsConstructor
+@Service
 public class TaxiMapGraphBuilder {
-    private final OperationalSearchService operationalSearchService = new OperationalSearchService();
+    private final OperationalSearchService operationalSearchService;
 
     public Graph<Coordinates> buildGraph(TaxiMap taxiMap) {
         var graph = new Graph<Coordinates>();

@@ -1,0 +1,60 @@
+{
+  "quickest": {
+    "taxi": "red",
+    "cost": 15,
+    "distance": 9,
+    "travelTime": 0.18,
+    "waitTime": 0.08,
+    "route": [
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      }
+    ]
+  },
+  "cheapest": {
+    "taxi": "black",
+    "cost": 13,
+    "distance": 10,
+    "travelTime": 0.2,
+    "waitTime": 0.1,
+    "route": [
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 3
+      }
+    ]
+  }
+}
