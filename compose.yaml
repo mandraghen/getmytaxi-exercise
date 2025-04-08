@@ -1,0 +1,8 @@
+services:
+  getmytaxi:
+    container_name: getmytaxi-exercise
+    build: .
+    restart: no
+    volumes:
+      - ./src/test/resources/mocks:/sample
+      - ./data:/application/data

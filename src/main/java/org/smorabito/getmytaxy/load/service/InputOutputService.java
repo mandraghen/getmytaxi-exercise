@@ -69,7 +69,7 @@ public class InputOutputService {
         File file = new File(inputFilepath);
         //validate the file
         if (!file.exists() && !file.isFile()) {
-            LOG.error("File " + inputFilepath + " not found or not a file");
+            LOG.error("File {} not found or not a file", inputFilepath);
             return Optional.empty();
         }
         return Optional.of(file);
@@ -80,9 +80,9 @@ public class InputOutputService {
         File directory = file.getParentFile();
         if (directory != null && !directory.exists()) {
             if (directory.mkdirs()) {
-                LOG.info("Directory created successfully: {}", directory.getPath());
+                LOG.info("Directory created successfully: {}", directory.getAbsolutePath());
             } else {
-                LOG.error("Failed to create directory: {}", directory.getPath());
+                LOG.error("Failed to create directory: {}", directory.getAbsolutePath());
             }
         }
 
