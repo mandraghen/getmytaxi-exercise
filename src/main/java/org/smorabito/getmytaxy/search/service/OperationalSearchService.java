@@ -21,9 +21,9 @@ public class OperationalSearchService {
      *
      * @param graph  the graph to be processed
      * @param source the source node
+     * @param destinationNodes the destination nodes to be reached
      * @return the graph with the shortest path from the source node to all other nodes
      */
-    //TODO Improve getting a list of destinations and stopping when all the destinations are reached
     public <T> Graph<T> calculateShortestPathFromSource(Graph<T> graph, Node<T> source,
                                                         Function<Weight, Integer> weightProvider,
                                                         Collection<Node<T>> destinationNodes) {
@@ -136,7 +136,6 @@ public class OperationalSearchService {
 
     public <T> Optional<Node<T>> searchNode(Graph<T> graph, T nodeId) {
         var sampleNode = new Node<>(nodeId);
-        //TODO consider to change node set with a map to improve performances
         if (graph.getNodes().contains(sampleNode)) {
             return graph.getNodes().stream().filter(node -> node.equals(sampleNode)).findFirst();
         }
