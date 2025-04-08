@@ -1,3 +1,4 @@
+[![Java build with Gradle](https://github.com/mandraghen/getmytaxi-exercise/actions/workflows/build-gradle.yaml/badge.svg)](https://github.com/mandraghen/getmytaxi-exercise/actions/workflows/build-gradle.yaml)
 # getmytaxi-exercise
 Implementation of the code challenge provided by akamas.
 
