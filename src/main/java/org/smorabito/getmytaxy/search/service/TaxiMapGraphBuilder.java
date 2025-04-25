@@ -55,8 +55,8 @@ public class TaxiMapGraphBuilder {
     private Weight calculateWeight(Coordinates sourceCoordinate, Coordinates destinationCoordinate, TaxiMap taxiMap) {
         int price = taxiMap.getCheckpoints().stream()
                 .filter(checkpoint -> isThroughWall(checkpoint, sourceCoordinate, destinationCoordinate))
+                .mapToInt(checkpoint -> checkpoint.getPrice() + 1)
                 .findFirst()
-                .map(checkpoint -> checkpoint.getPrice() + 1)
                 .orElse(1);
         return new Weight(1, price);
     }
