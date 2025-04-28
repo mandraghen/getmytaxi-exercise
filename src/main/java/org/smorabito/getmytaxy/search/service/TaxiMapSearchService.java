@@ -37,20 +37,23 @@ public class TaxiMapSearchService {
         Graph<Coordinates> graph = taxiMapGraphBuilder.buildGraph(taxiMap);
         LOG.debug("Created Graph: {}", graph);
 
-        Optional<Node<Coordinates>> source = operationalSearchService.searchNode(graph, request.getSource());
-        if (source.isEmpty()) {
+        var source = operationalSearchService.searchNode(graph, request.getSource()).orElse(null);
+        if (source == null) {
             LOG.error("Source node not found in the graph");
             return Optional.empty();
         }
 
+        var destinationNode = operationalSearchService.searchNode(graph, request.getDestination()).orElse(null);
+        if (destinationNode == null) {
+            LOG.error("Destination node not found in the graph");
+            return Optional.empty();
+        }
+
         HashMap<Taxi, Node<Coordinates>> taxiToNodeMap = buildTaxiToNodesMap(taxis, graph);
-        Node<Coordinates> destinationNode =
-                operationalSearchService.searchNode(graph, request.getDestination())
-                        .orElseThrow(() -> new IllegalArgumentException("Destination node not found in the graph"));
         var destinationNodes = new LinkedList<>(taxiToNodeMap.values());
         destinationNodes.add(destinationNode);
 
-        graph = operationalSearchService.calculateShortestPathFromSource(graph, source.get(), Weight::getDistance,
+        graph = operationalSearchService.calculateShortestPathFromSource(graph, source, Weight::getDistance,
                 destinationNodes);
         LOG.debug("Graph after operational search calculation: {}", graph);
         //Store results for the quickest taxi
@@ -59,7 +62,7 @@ public class TaxiMapSearchService {
                 .ifPresent(result::setQuickest);
 
         //run the operational search by price
-        graph = operationalSearchService.calculateShortestPathFromSource(graph, source.get(), Weight::getPrice,
+        graph = operationalSearchService.calculateShortestPathFromSource(graph, source, Weight::getPrice,
                 destinationNodes);
         extractBestTaxiRoute(taxiToNodeMap, destinationNode, Weight::getPrice)
                 .ifPresent(result::setCheapest);

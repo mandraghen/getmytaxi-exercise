@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -78,12 +77,10 @@ public class InputOutputServiceTest {
     }
 
     @Test
-    public void shouldThrowExceptionWhenFileNotFound() {
-        assertThrows(IllegalArgumentException.class, () ->
-                inputOutputService.parseInputFiles(
-                NOT_VALID_TAXI_MAP_FILENAME,
-                VALID_TAXI_COORDINATES_FILENAME,
-                VALID_REQUEST_FILENAME));
+    public void shouldReturnEmptyWhenFileNotFound() {
+        Optional<InputFiles> inputFiles = inputOutputService.parseInputFiles(NOT_VALID_TAXI_MAP_FILENAME, VALID_TAXI_COORDINATES_FILENAME,
+                VALID_REQUEST_FILENAME);
+        assertTrue(inputFiles.isEmpty());
     }
 
     @Test

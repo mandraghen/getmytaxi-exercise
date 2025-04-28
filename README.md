@@ -92,3 +92,4 @@ It's possible to use the application in a docker container, using the provided D
 ## Points of improvement
 - Use interfaces: despite nowadays someone thinks that interfaces are not needed anymore when there is only one implementation, I think they are useful to decouple the implementation from the declaration, also from the DI perspective. This makes also clearer which methods can be exposed to other classes.
 - Complete test coverage: unit tests should cover ideally 100% of the code. This is not really useful for this exercise.
+- Change `Set<Node<T>> nodes` into the `Graph<T>` class into `Map<T, Node<T>> nodes` to avoid the need to iterate over the set of nodes in case of search. This would improve the performance of the algorithm, especially in case of big graphs.

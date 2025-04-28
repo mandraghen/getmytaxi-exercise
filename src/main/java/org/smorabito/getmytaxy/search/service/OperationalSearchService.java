@@ -32,7 +32,6 @@ public class OperationalSearchService {
         resetGraph(graph);
         //init first node and hash sets
         initWeight(source.getSourceDistance());
-
         var visitedNodes = new HashSet<Node<T>>();
         var unvisitedNodes = new HashSet<Node<T>>();
 
@@ -102,12 +101,12 @@ public class OperationalSearchService {
     private <T> void updateMinimumDistance(Node<T> evaluationNode, Weight edgeWeigh, Node<T> sourceNode,
                                            Function<Weight, Integer> weightProvider) {
         int sourceDistance = weightProvider.apply(sourceNode.getSourceDistance());
-        int edgeWeighValue = weightProvider.apply(edgeWeigh);
+        int edgeWeightValue = weightProvider.apply(edgeWeigh);
         int evaluationDistance = weightProvider.apply(evaluationNode.getSourceDistance());
-        if (sourceDistance + edgeWeighValue < evaluationDistance) {
+        if (sourceDistance + edgeWeightValue < evaluationDistance) {
             updateAllWeights(evaluationNode, edgeWeigh, sourceNode);
             //update the shortest path of the evaluation node starting from the current node shortest path and adding it
-            LinkedList<Node<T>> shortestPath = new LinkedList<>(sourceNode.getShortestPath());
+            var shortestPath = new LinkedList<>(sourceNode.getShortestPath());
             shortestPath.add(sourceNode);
             evaluationNode.setShortestPath(shortestPath);
         }

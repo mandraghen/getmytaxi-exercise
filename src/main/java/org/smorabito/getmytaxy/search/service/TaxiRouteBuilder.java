@@ -20,12 +20,12 @@ public class TaxiRouteBuilder {
         taxiRoute.setDistance(taxiNode.getSourceDistance().getDistance() +
                 destinationNode.getSourceDistance().getDistance());
 
-        LOG.info("Setting for taxi {} distance: taxi -> customer={}, customer -> destination={}", taxi.getId(),
+        LOG.debug("Setting for taxi {} distance: taxi -> customer={}, customer -> destination={}", taxi.getId(),
                 taxiNode.getSourceDistance().getDistance(), destinationNode.getSourceDistance().getDistance());
 
         taxiRoute.setCost(taxiNode.getSourceDistance().getPrice() + destinationNode.getSourceDistance().getPrice());
 
-        LOG.info("Setting for taxi {} price: taxi -> customer={}, customer -> destination={}", taxi.getId(),
+        LOG.debug("Setting for taxi {} price: taxi -> customer={}, customer -> destination={}", taxi.getId(),
                 taxiNode.getSourceDistance().getPrice(), destinationNode.getSourceDistance().getPrice());
 
         taxiRoute.setWaitTime(calculateTime(taxiNode));

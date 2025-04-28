@@ -25,24 +25,32 @@ public class InputOutputService {
     public Optional<InputFiles> parseInputFiles(String taxiMapFilename, String taxiCoordinatesFilename,
                                                 String requestFilename) {
         //read input json file
-        try {
-            InputFiles inputFiles = new InputFiles();
-
-            inputFiles.setTaxiMap(loadInputFile(taxiMapFilename, TaxiMap.class)
-                    .orElseThrow(IllegalArgumentException::new));
-            inputFiles.setTaxis(loadInputList(taxiCoordinatesFilename, Taxi.class)
-                    .orElseThrow(IllegalArgumentException::new));
-            inputFiles.setRequest(loadInputFile(requestFilename, Request.class)
-                    .orElseThrow(IllegalArgumentException::new));
-
-            return Optional.of(inputFiles);
-        } catch (IOException e) {
-            LOG.error("Error reading the input files", e);
+        TaxiMap taxiMap = loadInputFile(taxiMapFilename, TaxiMap.class).orElse(null);
+        if(taxiMap == null) {
+            LOG.error("Error reading taxi map file");
             return Optional.empty();
         }
+        List<Taxi> taxis = loadInputList(taxiCoordinatesFilename, Taxi.class).orElse(null);
+        if(taxis == null) {
+            LOG.error("Error reading taxi coordinates file");
+            return Optional.empty();
+        }
+        Request request = loadInputFile(requestFilename, Request.class).orElse(null);
+        if(request == null) {
+            LOG.error("Error reading request file");
+            return Optional.empty();
+        }
+
+        InputFiles inputFiles = new InputFiles();
+
+        inputFiles.setTaxiMap(taxiMap);
+        inputFiles.setTaxis(taxis);
+        inputFiles.setRequest(request);
+
+        return Optional.of(inputFiles);
     }
 
-    private <T> Optional<T> loadInputFile(String inputFilepath, Class<T> resultClass) throws IOException {
+    private <T> Optional<T> loadInputFile(String inputFilepath, Class<T> resultClass) {
         return fetchFile(inputFilepath)
                 .map(file -> {
                     try {
@@ -56,7 +64,7 @@ public class InputOutputService {
                 });
     }
 
-    private <T> Optional<List<T>> loadInputList(String inputFilepath, Class<T> resultClass) throws IOException {
+    private <T> Optional<List<T>> loadInputList(String inputFilepath, Class<T> resultClass) {
         return fetchFile(inputFilepath)
                 .map(file -> {
                     try {
