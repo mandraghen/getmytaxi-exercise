@@ -70,7 +70,7 @@ public class OperationalSearchService {
 
     private <T> void resetGraph(Graph<T> graph) {
         if (graph.isCalculated()) {
-            graph.getNodes().forEach(node -> {
+            graph.getNodes().forEach((id, node) -> {
                 node.setSourceDistance(new Weight(Integer.MAX_VALUE, Integer.MAX_VALUE));
                 node.setShortestPath(new LinkedList<>());
             });
@@ -123,7 +123,6 @@ public class OperationalSearchService {
     }
 
     public <T> Optional<Node<T>> searchNode(Graph<T> graph, T nodeId) {
-        var sampleNode = new Node<>(nodeId);
-        return graph.getNodes().stream().filter(node -> node.equals(sampleNode)).findFirst();
+        return Optional.ofNullable(graph.getNodes().get(nodeId));
     }
 }
