@@ -6,9 +6,9 @@ import org.smorabito.getmytaxy.search.domain.Node;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -19,8 +19,8 @@ public class OperationalSearchService {
      * This method is used to calculate the shortest path from a source node to all other nodes in the graph using
      * Dijkstra's algorithm.
      *
-     * @param graph  the graph to be processed
-     * @param source the source node
+     * @param graph            the graph to be processed
+     * @param source           the source node
      * @param destinationNodes the destination nodes to be reached
      * @return the graph with the shortest path from the source node to all other nodes
      */
@@ -32,9 +32,8 @@ public class OperationalSearchService {
         resetGraph(graph);
         //init first node and hash sets
         initWeight(source.getSourceDistance());
-
-        Set<Node<T>> visitedNodes = new HashSet<>();
-        Set<Node<T>> unvisitedNodes = new HashSet<>();
+        var visitedNodes = new HashSet<Node<T>>();
+        var unvisitedNodes = new HashSet<Node<T>>();
 
         unvisitedNodes.add(source);
 
@@ -44,22 +43,18 @@ public class OperationalSearchService {
             Node<T> currentNode = getLowestDistanceNode(unvisitedNodes, weightProvider);
             unvisitedNodes.remove(currentNode);
             //iterate through all the possible destinations from the current node
-            for (Map.Entry<Node<T>, Weight> adjacencyPair : currentNode.getAdjacentNodes().entrySet()) {
-                Node<T> adjacentNode = adjacencyPair.getKey();
-                Weight edgeWeight = adjacencyPair.getValue();
+            currentNode.getAdjacentNodes().forEach((adjacentNode, edgeWeight) -> {
                 //if the node is not visited yet, update the distance and the shortest path if it's lower than the current one
                 // and take it for the next iteration
                 if (!visitedNodes.contains(adjacentNode)) {
                     updateMinimumDistance(adjacentNode, edgeWeight, currentNode, weightProvider);
                     unvisitedNodes.add(adjacentNode);
                 }
-            }
+            });
             visitedNodes.add(currentNode);
 
             //if the current node is one of the destination nodes, and check if all the destination nodes are visited
-            destinationNodesSet.remove(currentNode);
-            if (destinationNodesSet.isEmpty()) {
-                //if all the destination nodes are visited, break the loop
+            if (destinationNodesSet.remove(currentNode) && destinationNodesSet.isEmpty()) {
                 break;
             }
         }
@@ -75,7 +70,7 @@ public class OperationalSearchService {
 
     private <T> void resetGraph(Graph<T> graph) {
         if (graph.isCalculated()) {
-            graph.getNodes().forEach(node -> {
+            graph.getNodes().forEach((id, node) -> {
                 node.setSourceDistance(new Weight(Integer.MAX_VALUE, Integer.MAX_VALUE));
                 node.setShortestPath(new LinkedList<>());
             });
@@ -90,16 +85,9 @@ public class OperationalSearchService {
      * @return the node with the lowest distance from the source node
      */
     private <T> Node<T> getLowestDistanceNode(Set<Node<T>> unvisitedNodes, Function<Weight, Integer> weightProvider) {
-        Node<T> lowestDistanceNode = null;
-        int lowestDistance = Integer.MAX_VALUE;
-        for (Node<T> node : unvisitedNodes) {
-            int nodeDistance = weightProvider.apply(node.getSourceDistance());
-            if (nodeDistance < lowestDistance) {
-                lowestDistance = nodeDistance;
-                lowestDistanceNode = node;
-            }
-        }
-        return lowestDistanceNode;
+        return unvisitedNodes.stream()
+                .min(Comparator.comparingInt(node -> weightProvider.apply(node.getSourceDistance())))
+                .orElse(null);
     }
 
     /**
@@ -113,12 +101,12 @@ public class OperationalSearchService {
     private <T> void updateMinimumDistance(Node<T> evaluationNode, Weight edgeWeigh, Node<T> sourceNode,
                                            Function<Weight, Integer> weightProvider) {
         int sourceDistance = weightProvider.apply(sourceNode.getSourceDistance());
-        int edgeWeighValue = weightProvider.apply(edgeWeigh);
+        int edgeWeightValue = weightProvider.apply(edgeWeigh);
         int evaluationDistance = weightProvider.apply(evaluationNode.getSourceDistance());
-        if (sourceDistance + edgeWeighValue < evaluationDistance) {
+        if (sourceDistance + edgeWeightValue < evaluationDistance) {
             updateAllWeights(evaluationNode, edgeWeigh, sourceNode);
             //update the shortest path of the evaluation node starting from the current node shortest path and adding it
-            LinkedList<Node<T>> shortestPath = new LinkedList<>(sourceNode.getShortestPath());
+            var shortestPath = new LinkedList<>(sourceNode.getShortestPath());
             shortestPath.add(sourceNode);
             evaluationNode.setShortestPath(shortestPath);
         }
@@ -135,10 +123,6 @@ public class OperationalSearchService {
     }
 
     public <T> Optional<Node<T>> searchNode(Graph<T> graph, T nodeId) {
-        var sampleNode = new Node<>(nodeId);
-        if (graph.getNodes().contains(sampleNode)) {
-            return graph.getNodes().stream().filter(node -> node.equals(sampleNode)).findFirst();
-        }
-        return Optional.empty();
+        return Optional.ofNullable(graph.getNodes().get(nodeId));
     }
 }

@@ -19,7 +19,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -38,30 +37,34 @@ public class TaxiMapSearchService {
         Graph<Coordinates> graph = taxiMapGraphBuilder.buildGraph(taxiMap);
         LOG.debug("Created Graph: {}", graph);
 
-        Optional<Node<Coordinates>> source = operationalSearchService.searchNode(graph, request.getSource());
-        if (source.isEmpty()) {
+        var source = operationalSearchService.searchNode(graph, request.getSource()).orElse(null);
+        if (source == null) {
             LOG.error("Source node not found in the graph");
             return Optional.empty();
         }
 
-        var taxiToNodeMap = buildTaxiToNodesMap(taxis, graph);
-        Optional<Node<Coordinates>> destinationNode =
-                operationalSearchService.searchNode(graph, request.getDestination());
-        LinkedList<Node<Coordinates>> destinationNodes = new LinkedList<>(taxiToNodeMap.values());
-        destinationNode.ifPresent(destinationNodes::add);
+        var destinationNode = operationalSearchService.searchNode(graph, request.getDestination()).orElse(null);
+        if (destinationNode == null) {
+            LOG.error("Destination node not found in the graph");
+            return Optional.empty();
+        }
 
-        graph = operationalSearchService.calculateShortestPathFromSource(graph, source.get(), Weight::getDistance,
+        HashMap<Taxi, Node<Coordinates>> taxiToNodeMap = buildTaxiToNodesMap(taxis, graph);
+        var destinationNodes = new LinkedList<>(taxiToNodeMap.values());
+        destinationNodes.add(destinationNode);
+
+        graph = operationalSearchService.calculateShortestPathFromSource(graph, source, Weight::getDistance,
                 destinationNodes);
         LOG.debug("Graph after operational search calculation: {}", graph);
         //Store results for the quickest taxi
         var result = new BestRoutes();
-        extractBestTaxiRoute(taxiToNodeMap, destinationNode.orElse(null), Weight::getDistance)
+        extractBestTaxiRoute(taxiToNodeMap, destinationNode, Weight::getDistance)
                 .ifPresent(result::setQuickest);
 
         //run the operational search by price
-        graph = operationalSearchService.calculateShortestPathFromSource(graph, source.get(), Weight::getPrice,
+        graph = operationalSearchService.calculateShortestPathFromSource(graph, source, Weight::getPrice,
                 destinationNodes);
-        extractBestTaxiRoute(taxiToNodeMap, destinationNode.orElse(null), Weight::getPrice)
+        extractBestTaxiRoute(taxiToNodeMap, destinationNode, Weight::getPrice)
                 .ifPresent(result::setCheapest);
 
         LOG.debug("Graph after operational search calculation: {}", graph);
@@ -80,13 +83,11 @@ public class TaxiMapSearchService {
     private Optional<TaxiRoute> extractBestTaxiRoute(HashMap<Taxi, Node<Coordinates>> taxiToNodeMap,
                                                      Node<Coordinates> destinationNode,
                                                      Function<Weight, Integer> weightProvider) {
-        Optional<Map.Entry<Taxi, Node<Coordinates>>> taxiNode = taxiToNodeMap.entrySet()
-                .stream().min(Comparator.comparingInt(entry ->
-                        weightProvider.apply(entry.getValue().getSourceDistance())));
-        if (taxiNode.isPresent() && destinationNode != null) {
-            Map.Entry<Taxi, Node<Coordinates>> taxiNodeEntry = taxiNode.get();
-            return Optional.of(taxiRouteBuilder.buildTaxiRoute(taxiNodeEntry.getKey(), taxiNodeEntry.getValue(), destinationNode));
-        }
-        return Optional.empty();
+        return taxiToNodeMap.entrySet()
+                .stream()
+                .min(Comparator.comparingInt(entry ->
+                        weightProvider.apply(entry.getValue().getSourceDistance())))
+                .map(entry ->
+                        taxiRouteBuilder.buildTaxiRoute(entry.getKey(), entry.getValue(), destinationNode));
     }
 }

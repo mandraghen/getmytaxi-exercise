@@ -32,7 +32,6 @@ public class TaxiMapGraphBuilder {
                 searchNode(graph, x, y)
                         .ifPresent(node -> addDestinations(node, graph, taxiMap));
             }
-
         }
 
         return graph;
@@ -53,10 +52,11 @@ public class TaxiMapGraphBuilder {
     }
 
     private Weight calculateWeight(Coordinates sourceCoordinate, Coordinates destinationCoordinate, TaxiMap taxiMap) {
+        // Distance is always 1 Km by design, price is 1 or is increased by the value of the checkpoint that passes
         int price = taxiMap.getCheckpoints().stream()
                 .filter(checkpoint -> isThroughWall(checkpoint, sourceCoordinate, destinationCoordinate))
+                .mapToInt(checkpoint -> checkpoint.getPrice() + 1)
                 .findFirst()
-                .map(checkpoint -> checkpoint.getPrice() + 1)
                 .orElse(1);
         return new Weight(1, price);
     }

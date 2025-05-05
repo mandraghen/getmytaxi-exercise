@@ -4,17 +4,17 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 @Getter
 @ToString
 public class Graph<T> {
     @Setter
     private boolean calculated = false;
-    private final Set<Node<T>> nodes = new LinkedHashSet<>();
+    private final Map<T, Node<T>> nodes = new HashMap<>();
 
     public void addNode(Node<T> nodeA) {
-        nodes.add(nodeA);
+        nodes.put(nodeA.getId(), nodeA);
     }
 }

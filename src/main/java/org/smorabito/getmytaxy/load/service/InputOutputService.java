@@ -24,45 +24,59 @@ public class InputOutputService {
 
     public Optional<InputFiles> parseInputFiles(String taxiMapFilename, String taxiCoordinatesFilename,
                                                 String requestFilename) {
-        InputFiles inputFiles;
-
         //read input json file
-        try {
-            inputFiles = new InputFiles();
-
-            inputFiles.setTaxiMap(loadInputFile(taxiMapFilename, TaxiMap.class)
-                    .orElseThrow(IllegalArgumentException::new));
-            inputFiles.setTaxis(loadInputList(taxiCoordinatesFilename, Taxi.class)
-                    .orElseThrow(IllegalArgumentException::new));
-            inputFiles.setRequest(loadInputFile(requestFilename, Request.class)
-                    .orElseThrow(IllegalArgumentException::new));
-        } catch (IOException e) {
-            LOG.error("Error reading the input files", e);
+        TaxiMap taxiMap = loadInputFile(taxiMapFilename, TaxiMap.class).orElse(null);
+        if(taxiMap == null) {
+            LOG.error("Error reading taxi map file");
             return Optional.empty();
         }
+        List<Taxi> taxis = loadInputList(taxiCoordinatesFilename, Taxi.class).orElse(null);
+        if(taxis == null) {
+            LOG.error("Error reading taxi coordinates file");
+            return Optional.empty();
+        }
+        Request request = loadInputFile(requestFilename, Request.class).orElse(null);
+        if(request == null) {
+            LOG.error("Error reading request file");
+            return Optional.empty();
+        }
+
+        InputFiles inputFiles = new InputFiles();
+
+        inputFiles.setTaxiMap(taxiMap);
+        inputFiles.setTaxis(taxis);
+        inputFiles.setRequest(request);
 
         return Optional.of(inputFiles);
     }
 
-    private <T> Optional<T> loadInputFile(String inputFilepath, Class<T> resultClass) throws IOException {
-        Optional<File> file = fetchFile(inputFilepath);
-        if (file.isPresent()) {
-            T parsedObject = objectMapper.readValue(file.get(), resultClass);
-            LOG.info("File " + inputFilepath + " red successfully: " + parsedObject);
-            return Optional.ofNullable(parsedObject);
-        }
-        return Optional.empty();
+    private <T> Optional<T> loadInputFile(String inputFilepath, Class<T> resultClass) {
+        return fetchFile(inputFilepath)
+                .map(file -> {
+                    try {
+                        T parsedObject = objectMapper.readValue(file, resultClass);
+                        LOG.info("File {} read successfully: {}", inputFilepath, parsedObject);
+                        return parsedObject;
+                    } catch (IOException e) {
+                        LOG.error("Error reading file {}", inputFilepath, e);
+                        return null;
+                    }
+                });
     }
 
-    private <T> Optional<List<T>> loadInputList(String inputFilepath, Class<T> resultClass) throws IOException {
-        Optional<File> file = fetchFile(inputFilepath);
-        if (file.isPresent()) {
-            List<T> parsedObject = objectMapper.readValue(file.get(),
-                    objectMapper.getTypeFactory().constructCollectionType(List.class, resultClass));
-            LOG.info("File " + inputFilepath + " red successfully: " + parsedObject);
-            return Optional.ofNullable(parsedObject);
-        }
-        return Optional.empty();
+    private <T> Optional<List<T>> loadInputList(String inputFilepath, Class<T> resultClass) {
+        return fetchFile(inputFilepath)
+                .map(file -> {
+                    try {
+                        List<T> parsedObject = objectMapper.readValue(file,
+                                objectMapper.getTypeFactory().constructCollectionType(List.class, resultClass));
+                        LOG.info("File {} read successfully: {}", inputFilepath, parsedObject);
+                        return parsedObject;
+                    } catch (IOException e) {
+                        LOG.error("Error reading file {}", inputFilepath, e);
+                        return null;
+                    }
+                });
     }
 
     private Optional<File> fetchFile(String inputFilepath) {
@@ -78,16 +92,13 @@ public class InputOutputService {
     public <T> void writeObjectToFile(T object, String filename) {
         File file = new File(filename);
         File directory = file.getParentFile();
-        if (directory != null && !directory.exists()) {
-            if (directory.mkdirs()) {
-                LOG.info("Directory created successfully: {}", directory.getAbsolutePath());
-            } else {
-                LOG.error("Failed to create directory: {}", directory.getAbsolutePath());
-            }
+        if (file.getParentFile() != null && !directory.exists() && !directory.mkdirs()) {
+            LOG.error("Failed to create directory: {}", directory.getAbsolutePath());
+            return;
         }
 
         try {
-            objectMapper.writeValue(new File(filename), object);
+            objectMapper.writeValue(file, object);
         } catch (IOException e) {
             LOG.error("Error writing to file: " + filename, e);
         }
